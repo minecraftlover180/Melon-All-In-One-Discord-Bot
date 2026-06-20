@@ -1,0 +1,54 @@
+// © Author: itsfizys
+// https://discord.gg/aerox
+
+const { DataTypes } = require('sequelize');
+const sequelize = require('../sequelize');
+const BaseModel = require('../BaseModel');
+
+class Playlist extends BaseModel {
+    static init(sequelize) {
+        super.init(
+            {
+                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+                userId: { type: DataTypes.STRING, allowNull: false, comment: 'Discord User ID of the playlist owner.' },
+                name: { type: DataTypes.STRING, allowNull: false, comment: 'Name of the playlist.' },
+                shareCode: { type: DataTypes.STRING, allowNull: true, unique: true, comment: 'Unique code for sharing this playlist.' },
+            },
+            {
+                sequelize,
+                modelName: 'Playlist',
+                tableName: 'playlists',
+                timestamps: true,
+            }
+        );
+
+        return this;
+    }
+
+    static associate(models) {
+        this.hasMany(models.PlaylistTrack, {
+            foreignKey: 'playlistId',
+            as: 'tracks',
+            onDelete: 'CASCADE',
+        });
+    }
+}
+
+module.exports = Playlist;
+
+/*
+: ! Aegis !
+    + Discord: itsfizys
+    + Portfolio: https://itsfiizys.com
+    + Community: https://discord.gg/8wfT8SfB5Z  (Melon )
+    + for any queries reach out Community or DM me.
+*/
+
+/**
+ * Project: Melon
+ * Author: itsfizys (Aegis)
+ * Organization: AeroX Development
+ * GitHub: https://github.com/itsfizys
+ * License: Custom
+ * © 2026 AeroX Development. All rights reserved.
+ */
