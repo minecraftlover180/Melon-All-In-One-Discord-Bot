@@ -1,251 +1,216 @@
-<div align="center">
+## MINIMAL FIX FOR welcomeHandler.js
 
-# Melon
+You only need to ADD this code, NOT replace the entire file!
 
-A feature-rich, open source multipurpose Discord bot built with Discord.js v14.
-Designed for server protection, community management, AI chat, and automation.
+### STEP 1: Add the "Both" button handler
 
-[![Discord](https://img.shields.io/discord/1414217749038891102?color=5865F2&label=Support&logo=discord&logoColor=white)](https://discord.gg/aerox)
+**FIND:** Line 73 (before the container button handler)
+```javascript
+    if (id.startsWith('welcome_setup_container_')) {
+```
 
-</div>
+**ADD THIS ENTIRE BLOCK BEFORE IT (between line 72 and 73):**
 
----
+```javascript
+    if (id.startsWith('welcome_setup_both_')) {
+      const originalUserId = id.split('_').pop();
+      if (interaction.user.id !== originalUserId) {
+        const errorContainer = new ContainerBuilder().setAccentColor(0x2B2D31)
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('Only the command user can use this menu!')
+          );
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+        });
+      }
 
-## Overview
+      const container = new ContainerBuilder().setAccentColor(0x2B2D31)
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent('### Welcome Setup - Both')
+        )
+        .addSeparatorComponents(
+          new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true)
+        )
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent('Select the channel where welcome messages will be sent:')
+        )
+        .addActionRowComponents(
+          new ActionRowBuilder().addComponents(
+            new ChannelSelectMenuBuilder()
+              .setCustomId(`welcome_channel_both_${originalUserId}`)
+              .setPlaceholder('Select welcome channel')
+              .setChannelTypes(ChannelType.GuildText)
+          )
+        );
 
-Melon is a fully self-hostable, open source multipurpose Discord bot engineered to replace the need for several bots in a single server. It supports both **prefix commands** (default: `,`) and **slash commands** through a unified hybrid command system. Persistent data is stored in a **PostgreSQL** database via Sequelize ORM, and every feature is configurable on a per-server basis through setup commands.
+      return interaction.update({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2
+      });
+    }
 
----
-
-## Features
-
-### Security & Antinuke
-Protect your server from malicious actors and raids.
-
-- Detects and blocks mass channel deletions, role deletions, webhook creations, and unauthorized bot joins
-- Interactive setup wizard with configurable thresholds and punishment actions
-- Per-server whitelist management for trusted users and bots
-
-### Moderation
-Essential tools for keeping your server in order.
-
-- Ban, kick, mute, and temporary role assignment with reason tracking
-- Slowmode, channel lock/unlock, and nickname management
-- Bulk message purging with filters (user, bots, all)
-- Full voice moderation: mute, deafen, kick, move, pull, lock, and private channels
-
-### Automod
-Automatic rule enforcement without manual intervention.
-
-- Invite link and URL filtering with configurable whitelists
-- Anti-spam and mass mention detection
-- Per-channel and per-role whitelist support
-
-### Logging
-A comprehensive server audit trail.
-
-- Tracks message edits and deletions with content snapshots
-- Logs server changes: channels, roles, and emojis
-- Member joins, leaves, user updates, and voice state changes
-- Fully configurable log channel routing per event type
-
-### AI Integration
-A built-in conversational AI assistant named Melon.
-
-- Powered by **Groq API** for fast language model responses
-- Image analysis via **Gemini Vision API**
-- Real-time web search via **SerpAPI**
-- Per-channel enable/disable toggle
-- Custom identity — does not reveal underlying model or provider
-
-### Ticketing
-A complete support ticket system.
-
-- Multiple ticket categories with dedicated staff roles
-- Claim, transfer, rename, close, delete, and reopen tickets
-- Full ticket transcripts
-- Panel embeds for self-service ticket creation
-
-### Giveaways
-Run clean and fair giveaways.
-
-- Create giveaways with a custom prize, duration, and winner count
-- End giveaways early and reroll winners at any time
-- Automated ending with winner announcement
-
-### Welcome & Farewell
-Fully customizable join and leave messages.
-
-- Rich embed configuration with image and background support
-- Test command to preview messages before going live
-- Per-server setup with channel routing
-
-### Profile System
-User identity and engagement tracking.
-
-- Canvas-generated profile cards with custom biography, background, and social links
-- View profiles for any server member
-- Global message and invite leaderboards
-
-### Utility
-A wide range of general-purpose tools.
-
-- Unit and encoding conversions (cm/ft, kg/lb, Base32, Hex, Rot13, Binary)
-- Server info, user info, role info, and invite tracking with join positions
-- Export server data: bans, roles, members, and messages to file
-- AFK status, personal reminders, todo lists, Wikipedia search, calculator
-
-### Automation
-Background systems that run without manual input.
-
-- **Join to Create (J2C)** — dynamic temporary voice channels
-- **Autopost** — schedule recurring messages in any channel
-- **Autobump** — automated server bump scheduling
-- **Autoreact** — auto-react to messages in configured channels
-- **Vanity Roles** — assign roles based on user Discord status text
-- **Reaction Roles** — reaction and button-based role assignment
-
-### Fun & Roleplay
-Engagement commands for active communities.
-
-- Roleplay commands: hug, kiss, slap, pat, and more
-- Animal facts and images, meme generation, ship calculator, fake hack
-- GitHub and YouTube search integrations
-
----
-
-## Setup
-
-**Requirements:** Node.js >= 18, PostgreSQL database
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/AeroXDevs/melon.git
-cd melon
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure the bot
-# Edit src/config.js with your token, client ID, database URL, and API keys
-
-# 4. Start the bot
-npm start
 ```
 
 ---
 
-## Emoji Synchronisation
+### STEP 2: Add the "Both" channel select handler
 
-Melon uses **application emojis** — emojis uploaded directly to the bot's Discord application — so they are available globally across every server without requiring a dedicated emoji server.
+**FIND:** Line 591 (the end of channel select menu handlers, after container handler closes)
+```javascript
+      return interaction.update({ components: [container, selectRow, buttonRow], flags: MessageFlags.IsComponentsV2 });
+    }
+  }
 
-On first start, if a `tempassets/` folder is present in the project root containing emoji images (`.webp` for static, `.gif` for animated), Melon automatically:
-
-1. Uploads every image to the bot's application emojis via the Discord API
-2. Updates `src/emojis.json` with the new emoji IDs
-3. Deletes the `tempassets/` folder
-4. Restarts once to load the updated IDs
-
-On all subsequent starts the folder is absent, so the sync is skipped and the bot boots normally. No manual setup is required — the entire process is handled at startup.
-
-> **Note:** `tempassets/` is excluded from the repository via `.gitignore`. To re-run the sync (e.g. after adding new emojis), recreate the folder with the new images and restart the bot.
-
----
-
-## Configuration
-
-All configuration lives in `src/config.js`.
-
-| Key | Description |
-|-----|-------------|
-| `BOT_TOKEN` | Discord bot token from the Developer Portal |
-| `CLIENT_ID` | Bot application/client ID |
-| `OWNER_ID` | Your Discord user ID for owner-only commands |
-| `PREFIX` | Default text command prefix (default: `,`) |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `GROQ.API_KEY` | Groq API key for AI chat |
-| `SERPAPI.API_KEY` | SerpAPI key for web search in AI responses |
-| `STATUS.status` | Bot presence: `online`, `idle`, `dnd`, `invisible` |
-| `STATUS.activity` | Bot activity display text |
-| `SUPPORT_SERVER` | Your support server invite link |
-
-The database schema is automatically synced on startup — no manual migrations required.
-
----
-
-## Project Structure
-
+  return false;
 ```
-src/
-├── client.js                    Entry point — initializes client, DB, and loaders
-├── config.js                    Bot configuration and API keys
-├── emojis.json                  Application emoji mappings (name → formatted string)
-├── hybrid/                      Hybrid slash + prefix commands
-│   ├── ai/                      Melon AI chat
-│   ├── antinuke/                Antinuke protection
-│   ├── automod/                 Automated moderation
-│   ├── autobump/                Server bump automation
-│   ├── autopost/                Scheduled message posting
-│   ├── autoreact/               Auto-reaction bindings
-│   ├── farewell/                Farewell messages
-│   ├── giveaway/                Giveaway management
-│   ├── j2c/                     Join to Create voice channels
-│   ├── leaderboard/             Message and invite leaderboards
-│   ├── logging/                 Audit log configuration
-│   ├── profile/                 User profile cards
-│   ├── reactionroles/           Reaction-based role assignment
-│   ├── remind/                  Personal reminders
-│   ├── ticket/                  Full ticket system
-│   ├── todo/                    Personal todo lists
-│   ├── vanityroles/             Status-based role assignment
-│   ├── voice/                   Voice channel moderation
-│   ├── welcome/                 Welcome messages
-│   └── ...                      And more
-├── gateway/                     Discord event handlers
-│   ├── antinuke/                Antinuke detection logic
-│   ├── automod/                 Automod enforcement
-│   ├── interactions/            Interaction-specific handlers
-│   ├── messageCreate.js         Prefix command dispatcher
-│   ├── interactionCreate.js     Slash command dispatcher
-│   ├── welcomeEvent.js          Welcome trigger
-│   ├── farewellEvent.js         Farewell trigger
-│   ├── voiceStateUpdate.js      J2C and voice events
-│   ├── trackUserInvites.js      Invite usage tracking
-│   ├── trackUserMessages.js     Message count tracking
-│   └── ...                      And more
-├── data/
-│   └── models/                  Sequelize database models (27 total)
-├── lib/                         Internal utilities and helpers
-│   ├── emojiSync.js             Startup emoji synchronisation
-│   ├── profileCard.js           Canvas profile card renderer
-│   ├── pagination.js            Paginated embed component
-│   ├── giveawayUtils.js         Giveaway timer and result logic
-│   ├── ticketUtils.js           Ticket creation and management
-│   ├── commandLoader.js         Dynamic command loader
-│   └── ...                      And more
-└── static/                      Static assets (fonts, badges, images)
+
+**ADD THIS ENTIRE BLOCK BEFORE `} return false;` (after line 591):**
+
+```javascript
+    if (id.startsWith('welcome_channel_both_')) {
+      const originalUserId = id.split('_').pop();
+      if (interaction.user.id !== originalUserId) {
+        const errorContainer = new ContainerBuilder().setAccentColor(0x2B2D31)
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent('Only the command user can use this menu!'));
+        return interaction.reply({ components: [errorContainer], flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral });
+      }
+
+      const selectedChannel = interaction.channels.first();
+      if (!selectedChannel) {
+        const container = new ContainerBuilder().setAccentColor(0x2B2D31)
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent('Please select a valid channel.'));
+        return interaction.update({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      }
+
+      await WelcomeConfig.upsert({ guildId: interaction.guild.id, channelId: selectedChannel.id, type: 'both' });
+
+      const container = new ContainerBuilder().setAccentColor(0x2B2D31)
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent('### Welcome Setup - Both'))
+        .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent('Customize your welcome message. You will set BOTH container and simple message.'));
+
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`welcome_field_select_${originalUserId}`)
+        .setPlaceholder('Select a field to customize')
+        .addOptions(
+          new StringSelectMenuOptionBuilder().setLabel('Title').setDescription('Set the container title').setValue('title'),
+          new StringSelectMenuOptionBuilder().setLabel('Description').setDescription('Set the container description').setValue('description'),
+          new StringSelectMenuOptionBuilder().setLabel('Color').setDescription('Set the accent color (hex code)').setValue('color'),
+          new StringSelectMenuOptionBuilder().setLabel('Thumbnail').setDescription('Set the thumbnail image URL').setValue('thumbnail'),
+          new StringSelectMenuOptionBuilder().setLabel('Image').setDescription('Set the main image URL').setValue('image'),
+          new StringSelectMenuOptionBuilder().setLabel('Simple Message').setDescription('Set the simple text message').setValue('simple_message')
+        );
+
+      const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+      const buttonRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`welcome_submit_${originalUserId}`).setLabel('Submit').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('welcome_variables').setLabel('Variables').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`welcome_cancel_${originalUserId}`).setLabel('Cancel').setStyle(ButtonStyle.Danger)
+      );
+
+      return interaction.update({ components: [container, selectRow, buttonRow], flags: MessageFlags.IsComponentsV2 });
+    }
 ```
 
 ---
 
-## Credits
+### STEP 3: Update the field_select handler to include 'simple_message'
 
-**Developer** — [itsfizys](https://github.com/itsfizys) (Aegis)  
-**Organisation** — [AeroX Development](https://github.com/AeroXDevs)
+**FIND:** Around line 350 (in the `welcome_field_select_` handler)
+```javascript
+      if (selectedValue === 'image') {
+        modal = new ModalBuilder()
+          .setCustomId(`welcome_field_image_${originalUserId}`)
+          .setTitle('Set Image');
+        const input = new TextInputBuilder()
+          .setCustomId('welcome_image')
+          .setLabel('Image URL')
+          .setPlaceholder('https://example.com/banner.png or use {server_icon}')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
+        modal.addComponents(new ActionRowBuilder().addComponents(input));
+      }
+
+      if (modal) {
+        return interaction.showModal(modal);
+      }
+      return true;
+    }
+```
+
+**ADD BEFORE the `if (modal)` check:**
+
+```javascript
+      if (selectedValue === 'simple_message') {
+        modal = new ModalBuilder()
+          .setCustomId(`welcome_field_simple_${originalUserId}`)
+          .setTitle('Set Simple Message');
+        const input = new TextInputBuilder()
+          .setCustomId('welcome_simple_text')
+          .setLabel('Simple Message')
+          .setPlaceholder('Welcome {user} to {server}!')
+          .setStyle(TextInputStyle.Paragraph)
+          .setMinLength(1)
+          .setMaxLength(2000)
+          .setRequired(true);
+        modal.addComponents(new ActionRowBuilder().addComponents(input));
+      }
+```
 
 ---
 
-## Support
+### STEP 4: Add modal submit handler for simple_message
 
-Join the AeroX Development Discord server for help, updates, and community support.
+**FIND:** Around line 290 (in the modal submit handlers)
+```javascript
+    if (id.startsWith('welcome_field_image_')) {
+```
 
-**[discord.gg/aerox](https://discord.gg/aerox)**
+**ADD THIS BEFORE IT:**
+
+```javascript
+    if (id.startsWith('welcome_field_simple_')) {
+      const originalUserId = id.split('_').pop();
+      const simpleText = interaction.fields.getTextInputValue('welcome_simple_text');
+
+      await interaction.deferUpdate();
+      await WelcomeConfig.update({ message: simpleText }, { where: { guildId: interaction.guild.id } });
+
+      const config = await WelcomeConfig.findOne({ where: { guildId: interaction.guild.id } });
+
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`welcome_field_select_${originalUserId}`)
+        .setPlaceholder('Select a field to customize')
+        .addOptions(
+          new StringSelectMenuOptionBuilder().setLabel('Title').setDescription('Set the container title').setValue('title'),
+          new StringSelectMenuOptionBuilder().setLabel('Description').setDescription('Set the container description').setValue('description'),
+          new StringSelectMenuOptionBuilder().setLabel('Color').setDescription('Set the accent color (hex code)').setValue('color'),
+          new StringSelectMenuOptionBuilder().setLabel('Thumbnail').setDescription('Set the thumbnail image URL').setValue('thumbnail'),
+          new StringSelectMenuOptionBuilder().setLabel('Image').setDescription('Set the main image URL').setValue('image'),
+          new StringSelectMenuOptionBuilder().setLabel('Simple Message').setDescription('Set the simple text message').setValue('simple_message')
+        );
+
+      const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+      const buttonRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`welcome_submit_${originalUserId}`).setLabel('Submit').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('welcome_variables').setLabel('Variables').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`welcome_cancel_${originalUserId}`).setLabel('Cancel').setStyle(ButtonStyle.Danger)
+      );
+
+      return interaction.editReply({ components: [selectRow, buttonRow], flags: MessageFlags.IsComponentsV2 });
+    }
+
+```
 
 ---
 
-<div align="center">
+## SUMMARY:
 
-© 2026 itsfizys (Aegis) — AeroX Development. All rights reserved.  
-See [LICENSE](./LICENSE) for usage terms.
+Just ADD 4 blocks to the existing file:
+1. ✅ Both button handler (45 lines) - Insert after line 72
+2. ✅ Both channel select handler (48 lines) - Insert after line 591
+3. ✅ Simple message field option (8 lines) - Insert in field_select handler
+4. ✅ Simple message modal handler (30 lines) - Insert in modal submit handler
 
-</div>
+Then restart bot! 🎉
